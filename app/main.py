@@ -61,6 +61,9 @@ async def gets_post():
 async def get_post(id: int):
     cursor.execute("SELECT * FROM posts WHERE id = %s", (str(id)))
     post = cursor.fetchone()
+    if not post:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"post with id {id} was not found")
     return {"post_detail": post}
 
 
@@ -78,24 +81,24 @@ async def create_post(post: Post):
 # delete route
 @app.delete("/posts/{id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_post(id: int):
-    index = find_index_id(id)
+    cursor.execute("DELETE FROM posts WHERE id = %s RETURNING *", (str(id)))
+    del_post = cursor.fetchone()
+    conn.commit()
 
-    if index is None:
+    if del_post is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"post with id: {id} does not exist")
-    my_posts.pop(index)
-    # return {"message": "post was delete successfully"}
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 # update route
 @app.put("/posts/{id}")
 async def update_post(id: int, post: Post):
-    index = find_index_id(id)
+    cursor.execute("UPDATE posts SET title = %s, content = %s, published = %s WHERE id = %s RETURNING *",
+                   (post.title, post.content, post.published, str(id)))
+    updated_post = cursor.fetchone()
+    conn.commit()
 
-    if index is None:
+    if updated_post is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"post with id: {id} does not exist")
-    post_dict = post.dict()
-    post_dict['id'] = id
-    my_posts[index] = post_dict
 
-    return {"data": post_dict}
+    return {"data": updated_post}
