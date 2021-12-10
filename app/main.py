@@ -54,14 +54,18 @@ async def root():
         "message": "hello Peter"
     }
 
-@app.get("/sql")
-def test(db: Session = Depends(get_db)):
-    return {"status": "success"}
 
-@app.get("/posts", status_code=status.HTTP_201_CREATED)
-async def gets_post():
-    cursor.execute("SELECT * FROM posts")
-    posts = cursor.fetchall()
+# @app.get("/sql")
+# def test(db: Session = Depends(get_db)):
+#     posts = db.query(models.Post).all()
+#     return {"status": posts}
+
+
+# @app.get("/posts", status_code=status.HTTP_201_CREATED)
+async def gets_post(db: Session = Depends(get_db)):
+    # cursor.execute("SELECT * FROM posts")
+    # posts = cursor.fetchall()
+    posts = db.query(models.Post).all()
     return {"data": posts}
 
 
