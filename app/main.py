@@ -1,10 +1,15 @@
 from random import randrange
 from typing import Optional
-from fastapi import FastAPI, Response, status, HTTPException
+from fastapi import FastAPI, Response, status, HTTPException, Depends
 from pydantic import BaseModel
 import psycopg2
 from psycopg2.extras import RealDictCursor
 import time
+from . import models
+from sqlalchemy.orm import Session
+from .database import engine, get_db
+
+models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
@@ -49,6 +54,9 @@ async def root():
         "message": "hello Peter"
     }
 
+@app.get("/sql")
+def test(db: Session = Depends(get_db)):
+    return {"status": "success"}
 
 @app.get("/posts", status_code=status.HTTP_201_CREATED)
 async def gets_post():
