@@ -12,7 +12,6 @@ models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
-
 while True:
     try:
         conn = psycopg2.connect(host="localhost", database="fastapi",
@@ -82,7 +81,7 @@ async def create_post(post: schemas.PostBase, db: Session = Depends(get_db)):
     # commit the changes
     # conn.commit()
     # new_post = models.Post(title=post.title, content=post.content, published=post.published)
-    new_post = models.Post(**post.dict()) #unpacked the dict
+    new_post = models.Post(**post.dict())  # unpacked the dict
     db.add(new_post)
     db.commit()
     db.refresh(new_post)
@@ -122,3 +121,14 @@ async def update_post(id: int, post: schemas.PostCreate, db: Session = Depends(g
     db.commit()
 
     return post_query.first()
+
+
+# user registration
+@app.post("/users", status_code=status.HTTP_201_CREATED, response_model=schemas.UserOut)
+async def create_user(user: schemas.CreateUser, db: Session = Depends(get_db)):
+    new_user = models.User(**user.dict())
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+
+    return new_user
