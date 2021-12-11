@@ -1,23 +1,16 @@
 from random import randrange
 from typing import Optional
 from fastapi import FastAPI, Response, status, HTTPException, Depends
-from pydantic import BaseModel
 import psycopg2
 from psycopg2.extras import RealDictCursor
 import time
-from . import models
+from . import models, schemas
 from sqlalchemy.orm import Session
 from .database import engine, get_db
 
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
-
-
-class Post(BaseModel):
-    title: str
-    content: str
-    published: bool = True
 
 
 while True:
@@ -66,7 +59,7 @@ async def gets_post(db: Session = Depends(get_db)):
     # cursor.execute("SELECT * FROM posts")
     # posts = cursor.fetchall()
     posts = db.query(models.Post).all()
-    return {"data": posts}
+    return posts
 
 
 @app.get("/posts/{id}")
@@ -77,12 +70,12 @@ async def get_post(id: int, db: Session = Depends(get_db)):
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=f"post with id {id} was not found")
-    return {"post_detail": post}
+    return post
 
 
 # post request
-@app.post("/posts", status_code=status.HTTP_201_CREATED)
-async def create_post(post: Post, db: Session = Depends(get_db)):
+@app.post("/posts", status_code=status.HTTP_201_CREATED, response_model=schemas.Post)
+async def create_post(post: schemas.PostBase, db: Session = Depends(get_db)):
     # cursor.execute("INSERT INTO posts (title, content, published) VALUES (%s, %s, %s) RETURNING *"
     #                , (post.title, post.content, post.published))
     # new_post = cursor.fetchone()
@@ -93,7 +86,7 @@ async def create_post(post: Post, db: Session = Depends(get_db)):
     db.add(new_post)
     db.commit()
     db.refresh(new_post)
-    return {"data": new_post}
+    return new_post
 
 
 # delete route
@@ -114,7 +107,7 @@ async def delete_post(id: int, db: Session = Depends(get_db)):
 
 # update route
 @app.put("/posts/{id}")
-async def update_post(id: int, post: Post, db: Session = Depends(get_db)):
+async def update_post(id: int, post: schemas.PostCreate, db: Session = Depends(get_db), response_model=schemas.Post):
     # cursor.execute("UPDATE posts SET title = %s, content = %s, published = %s WHERE id = %s RETURNING *",
     #                (post.title, post.content, post.published, str(id)))
     # updated_post = cursor.fetchone()
@@ -128,4 +121,4 @@ async def update_post(id: int, post: Post, db: Session = Depends(get_db)):
     post_query.update(post.dict(), synchronize_session=False)
     db.commit()
 
-    return {"data": post_query.first()}
+    return post_query.first()
