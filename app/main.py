@@ -7,6 +7,7 @@ import time
 from . import models, schemas, utils
 from sqlalchemy.orm import Session
 from .database import engine, get_db
+from .routers import post, user
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -40,16 +41,17 @@ def find_index_id(id):
             return i
 
 
+app.include_router(post.router)
+app.include_router(user.router)
+
+
 @app.get("/")
 async def root():
     return {
         "message": "hello Peter"
     }
 
-
 # @app.get("/sql")
 # def test(db: Session = Depends(get_db)):
 #     posts = db.query(models.Post).all()
 #     return {"status": posts}
-
-
