@@ -1,44 +1,11 @@
-from random import randrange
-from typing import Optional, List
-from fastapi import FastAPI, Response, status, HTTPException, Depends
-import psycopg2
-from psycopg2.extras import RealDictCursor
-import time
-from . import models, schemas, utils
-from sqlalchemy.orm import Session
-from .database import engine, get_db
+from fastapi import FastAPI
+from . import models
+from .database import engine
 from .routers import post, user, auth
 
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
-
-while True:
-    try:
-        conn = psycopg2.connect(host="localhost", database="fastapi",
-                                user="postgres", password="dinesh1997", cursor_factory=RealDictCursor)
-        cursor = conn.cursor()
-        print("database connection established successfully")
-        break
-    except Exception as error:
-        print("Database connection error")
-        print("Error: ", error)
-        time.sleep(2)
-
-my_posts = [{"title": "title of post 1", "content": "content of post 1", "id": 1},
-            {"title": "title of post 2", "content": "content of post 2", "id": 2}]
-
-
-def find_post(id):
-    for p in my_posts:
-        if p.get('id') == id:
-            return p
-
-
-def find_index_id(id):
-    for i, p in enumerate(my_posts):
-        if p.get('id') == id:
-            return i
 
 
 app.include_router(post.router)
@@ -49,8 +16,37 @@ app.include_router(auth.router)
 @app.get("/")
 async def root():
     return {
-        "message": "hello Peter"
+        "About Me": [
+            {
+                "name": "Dinesh Tamang",
+                "age": 21,
+                "college": "Dilkap college of Engineering",
+                "Branch": "T.E. Comps",
+                "GitHub": "https://bit.ly/30C80AA",
+                "LinkedIn": "https://bit.ly/3p8QkpW",
+                "check my work": "https://dineshtamang.netlify.app",
+                "skills": ["Linux", "Reactjs", "Nextjs", "Python",
+                           "MongoDB", "PostgreSQL", "Tailwindcss", "C++", "AWS Solution Architect"]
+            }
+        ]
     }
+
+# Test
+
+# my_posts = [{"title": "title of post 1", "content": "content of post 1", "id": 1},
+#             {"title": "title of post 2", "content": "content of post 2", "id": 2}]
+#
+#
+# def find_post(id):
+#     for p in my_posts:
+#         if p.get('id') == id:
+#             return p
+#
+#
+# def find_index_id(id):
+#     for i, p in enumerate(my_posts):
+#         if p.get('id') == id:
+#             return i
 
 # @app.get("/sql")
 # def test(db: Session = Depends(get_db)):
