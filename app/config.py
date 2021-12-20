@@ -2,16 +2,16 @@ from pydantic import BaseSettings
 
 
 class Settings(BaseSettings):
-    database_hostname: str
-    database_port: str
-    database_password: str = "localhost"
-    database_name: str
+    database_hostname: str = "localhost"
+    database_port: str = "5432"
+    database_password: str
+    database_name: str = "postgres"
     database_username: str = "postgres"
-    secret_key: str = "dfk3kjdfxjek443id64k"
+    secret_key: str = "dkjgi83jfkdjdt343df"
     algorithm: str
-    access_token_expire_minutes: int = 45
+    access_token_expire_minutes: int = 30
 
-    class config:
+    class Config:
         env_file = ".env"
 
 
