@@ -1,6 +1,7 @@
 from fastapi import Response, status, HTTPException, Depends, APIRouter
 from .. import models, schemas, oauth2
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from ..database import get_db
 from typing import List, Optional
 
@@ -10,7 +11,8 @@ router = APIRouter(
 )
 
 
-@router.get("/", status_code=status.HTTP_201_CREATED, response_model=List[schemas.Post])
+# @router.get("/", status_code=status.HTTP_201_CREATED, response_model=List[schemas.Post])
+@router.get("/", status_code=status.HTTP_201_CREATED)
 async def get_posts(db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user),
                     limit: int = 10, skip: int = 0, search: Optional[str] = ""):
     # cursor.execute("SELECT * FROM posts")
@@ -21,7 +23,13 @@ async def get_posts(db: Session = Depends(get_db), current_user: int = Depends(o
     # print(limit)
     # to get post of all users
     posts = db.query(models.Post).filter(models.Post.title.contains(search)).limit(limit).offset(skip).all()
-    return posts
+
+    # for perfoming joints operations
+    results = db.query(models.Post, func.count(models.Vote.post_id).label("votes")).\
+        join(models.Vote, models.Vote.post_id == models.Post.id, isouter=True).group_by(models.Post.id).all()
+    # print(results)
+
+    return results
 
 
 @router.get("/{id}", response_model=schemas.Post)
